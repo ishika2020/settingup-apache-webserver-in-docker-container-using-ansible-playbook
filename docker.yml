@@ -1,0 +1,69 @@
+- hosts: all
+   
+  tasks:
+   - name: creating a directory      
+     file:
+         state: directory
+         path: "/dvd1"
+   - name : mount
+     mount:
+         src: "/dev/cdrom"
+         path: "/dvd1"
+         state: mounted
+         fstype: "iso9660"
+   - name: yum appstream
+     yum_repository:
+         baseurl: "/dvd1/AppStream" 
+         name: "dvd1"
+         description: "yum repo dvd1" 
+         gpgcheck: no
+   - name: yum baseos
+     yum_repository:
+         baseurl: "/dvd1/BaseOS"
+         name: "dvd2"
+         description: "yum repo dvd2"
+         gpgcheck: no     
+   - name: docker repo
+     yum_repository:
+         baseurl: "https://download.docker.com/linux/centos/7/x86_64/stable/"
+         name: "docker"
+         description: "docker repo"
+         gpgcheck: no
+   - name: install docker
+     command: "yum install docker-ce --nobest -y"
+   - name: install python3
+     package: 
+         name: "python3"
+         state: present 
+   - name: install docker python library
+     pip:
+         name: "docker-py"
+   - name: creating a file
+     file:
+         path: "/root/webhtml"
+         state: directory
+   - name: copy html content /webhtml     
+     copy: 
+         src: "/root/myhtmlcode.html" 
+         dest: "/root/webhtml"
+   - name: start docker service     
+     service:
+         name: "docker"
+         state: started 
+         enabled: yes
+   - name: pull http image     
+     docker_image:
+         name: "httpd"
+         tag: latest
+         source: pull
+   - name: creating container     
+     docker_container:
+         name: "mycontainer1"
+         image: "httpd"
+         state: started
+         exposed_ports: "80"
+         ports: "8080:80"
+         volumes: "/root/webhtml:/usr/local/apache2/htdocs/"
+
+            
+    
